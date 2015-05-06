@@ -2,7 +2,7 @@ import unittest
 
 from unittest import TestCase
 
-from routefinder2 import MidLinkRouteFinder, RoutingError
+from routefinder import MidLinkRouteFinder, RoutingError
 
 import networkx
 
@@ -196,7 +196,135 @@ class TestLinksWithCoords(TestCase):
             [(.25, 0.), (1., 0.), (1., 1.)]
         )
 
-    
+
+
+class TestMixedTravelOrder(TestCase):
+
+    def setUp(self):
+
+        graph = networkx.MultiGraph()
+
+        nodes = [
+            (0, 0, 0),
+            (1, 0, 1),
+            (2, 0, 2),
+            (3, 0, 3),
+            (4, 1, 1),
+            (5, 1, 2)
+        ]
+
+
+        for nd, x, y in nodes:
+            graph.add_node(nd, coords = (x,y))
+
+        paths = [
+            (0, 1, 2, 3),
+            (1, 4, 5, 2), 
+        ]
+
+        for path in paths:
+            for u, v in zip(path[:-1], path[1:]):
+                graph.add_edge(u, v, coords = [],
+                    shape_order = (u, v),
+                    travel_order = [(u, v)]
+                )
+
+        graph[1][2][0]['travel_order'] = [(2, 1)]
+
+        m = MidLinkRouteFinder(graph)
+
+        self.m = m
+
+    def test_one_way_travel_against(self):
+
+        coords = getCoords(
+            self.m,
+            [(.25, .25), (.25, 2.75)]
+        )
+        
+        self.assertSequenceEqual(
+            coords,
+            [(0, .25), (0, 1), (1, 1), (1, 2), (0, 2), (0, 2.75)]
+        )
+        
+        
+    def test_one_way_travel_with(self):
+
+        coords = getCoords(
+            self.m,
+            [(.25, 1.75), (.25, 2.75)]
+        )
+        
+        self.assertSequenceEqual(
+            coords,
+            [(0, 1.75), (0, 1), (1, 1), (1, 2), (0, 2), (0, 2.75)]
+        )
+        
+
+class TestTwoWayTravelOrder(TestCase):
+
+    def setUp(self):
+
+        graph = networkx.MultiGraph()
+
+        nodes = [
+            (0, 0, 0),
+            (1, 0, 1),
+            (2, 0, 2),
+            (3, 0, 3),
+            (4, 1, 1),
+            (5, 1, 2)
+        ]
+
+
+        for nd, x, y in nodes:
+            graph.add_node(nd, coords = (x,y))
+
+        paths = [
+            (0, 1, 2, 3),
+            (1, 4, 5, 2), 
+        ]
+
+        for path in paths:
+            for u, v in zip(path[:-1], path[1:]):
+                graph.add_edge(u, v, coords = [],
+                    shape_order = (u, v),
+                    travel_order = [(u, v), (v, u)]
+                )
+
+        graph[1][2][0]['travel_order'] = [(1,2)]
+
+        m = MidLinkRouteFinder(graph)
+
+        self.m = m   
+
+    def test_one_way_travel_with(self):
+
+        coords = getCoords(
+            self.m,
+            [(.25, .25), (.25, 2.75)]
+        )
+        
+        self.assertSequenceEqual(
+            coords,
+            [(0, .25), (0, 1), (0, 2), (0, 2.75)]
+        )
+             
+    def test_one_way_travel_against(self):
+
+        coords = getCoords(
+            self.m,
+            [(.25, 2.75), (.25, .25)]
+        )
+        
+        self.assertSequenceEqual(
+            coords,
+            [(0, 2.75), (0, 2), (1, 2), (1,1), (0, 1), (0, .25)]
+        )
+
+
+
+
 
 #to test
 #various travel orders: both, opposite
@@ -205,6 +333,9 @@ class TestLinksWithCoords(TestCase):
 #test weights, presets, custom weights, providing base_weight
 #cutting: one link multiple times
 #overlapping routes: doubling back and circling around
-        
+#looping edges (back to same node)
+#multi edges
+
+
 if __name__ == '__main__':
     unittest.main()
