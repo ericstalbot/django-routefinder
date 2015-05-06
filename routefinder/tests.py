@@ -1,83 +1,63 @@
-from django.test import TestCase
-from django.core.urlresolvers import reverse
+import unittest
+from unittest import TestCase
 
-import json
 import networkx
 
 
+from routefinder import MidLinkRouteFinder
+
 def makeTestData():
 
-    g = networkx.DiGraph()
-    
-    g.add_node(
-        1,
-        coords = [-80., 30.]
-    )
-    
-    g.add_node(
-        2,
-        coords = [-80., 30.001]
-    )
-    
-    g.add_node(
-        3,
-        coords = [-79.999, 30.002]
-        
-    )
-    
-    g.add_edge(
-        1, 2, 
+    g = networkx.MultiGraph()
+
+    node_coords = [
+
+        (0,0),
+        (0,1),
+        (1,2),
+
+    ]
+
+    g.add_node(1, coords = (0, 0))
+    g.add_node(2, coords = (0, 1))
+    g.add_node(3, coords = (1, 2))
+
+
+    g.add_edge(1, 2,
         coords = [],
-        tags = ['gravel','class3']
-    )
-    
-    g.add_edge(
-        2, 1, 
-        coords = [],
-        tags = ['gravel', 'class3']
-    )
-    
-    g.add_edge(
-        2, 3,
-        coords = [(-80., 30.002)],
-        tags = ['paved', 'state_highway']
+        shape_order = (1,2),
+        travel_order = [(1,2), (2,1)]
     )
 
-    g.add_edge(
-        3, 2,
-        coords = [(-80., 30.002)],
-        tags = ['paved', 'state_highway']
+    g.add_edge(2, 3,
+        coords = [(0, 2)],
+        shape_order = (2,3),
+        travel_order = [(2,3), (3,2)]
     )
-    
+
     return g
 
+    
 
-
-
-class RouterFinderTests(TestCase):
+class TestMidLinkRouteFinder(TestCase):
 
     def setUp(self):
-        
-        self.network = makeTestData()
-        
-    def test_basic_routing(self):
-        
-        rf = RouteFinder(self.network)
-        
-        route = rf.getRoute(
-            [
-                (-80.0001, 30.0005), 
-                (-80.0001, 30.0015)
-            ],
-            {'paved':1.2}
-        )
-        
-        self.assertEqual(
-            route,
-            [   
-                (-80.0000, 30.0005), 
-                (-80.0000, 30.0015)
-            ]
-        )
-        
+        self.data = makeTestData()
 
+    def test_routing(self):
+
+        finder = MidLinkRouteFinder(self.data)
+
+        route = finder.findRoute([
+            (-0.5, 0.5),
+            (-0.5, 1.5)
+        ])
+
+        self.assertEqual(
+            route.coords
+            [(0, 0.5), (0, 1.5)]
+            
+        )
+
+if __name__ == '__main__':
+    unittest.main()
