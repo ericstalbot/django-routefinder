@@ -1,55 +1,69 @@
 
-    
-class dirt:
-    pass
-    
-class bigdirt:
+weight_presets = {
 
+    #for first three, need to prohibit freeways
+    'dirt':{},
+    
+    'bigdirt': {
 
-    trail = 0.8
-    class4 = 0.8
-    paved = 1.2
-    
-class megadirt:
+        'trail':  0.8,
+        'class4': 0.8,
+        'paved':  1.2
 
-    trail = 0.6
-    class4 = 0.6
-    paved = 1.4
-    
-    
-class motordirt:
-    
-    trail = 'prohibited'
-    
-    
-class motorbigdirt
+    },
 
-    trail = 'prohibited'
-    class4 = 0.8
-    paved = 1.2
-    
-class motormegadirt:
+    'megadirt':{
 
-    trail = 'prohibited'
-    class4 = 0.6
-    paved = 1.4
-    
-class sedandirt:
+        'trail':  0.6,
+        'class4': 0.6,
+        'paved':  1.4
 
-    trail = 'prohibited'
-    class4 = 'prohibited'
+    },
     
-class sedanbigdirt:
-
-    trail = 'prohibited'
-    class4 = 'prohibited'
-    paved = 1.2
+    'motordirt':{
     
-class sedanmegadirt:
+        'trail': 1e6
+    },
+    
+    
+    
+    'motorbigdirt':{
 
-    trail = 'prohibited'
-    class4 = 'prohibited'
-    paved = 1.4 
+        'trail':  1e6,
+        'class4': 0.8,
+        'paved':  1.2
+    },
+    
+    'motormegadirt':{
+
+        'trail':  1e6,
+        'class4': 0.6,
+        'paved':  1.4
+    },
+
+    
+    'sedandirt':{
+
+        'trail':  1e6,
+        'class4': 1e6
+    },
+    
+    'sedanbigdirt':{
+
+        'trail':  1e6,
+        'class4': 1e6,
+        'paved':  1.2
+
+    },
+    
+    'sedanmegadirt':{
+
+        'trail':  1e6,
+        'class4': 1e6,
+        'paved':  1.4
+    }
+
+}
     
 
     
