@@ -245,6 +245,7 @@ class MidLinkRouteFinder(object):
             raise InvalidInput('multipliers and preset cannot both be specified')
         
         if multipliers is not None:
+            #to do: each multiplier key must appear on at least one link?
             weight_name = 'custom_weight'
             self.weightGraph(multipliers, weight_name)
 
@@ -267,6 +268,7 @@ class MidLinkRouteFinder(object):
 
 
         if len(set(waypoint_nodes)) < 2:
+            #should this be a different error type?
             raise InvalidInput('the waypoints collapse to fewer than 2 nodes')
 
         nodes, keys = [], []
@@ -354,7 +356,9 @@ class MidLinkRouteFinder(object):
 
 
 
-#to do: joining links back together              
+#to do:
+#joining links back together
+#more detail for response, eg tags, distance, etc
         
         
 
