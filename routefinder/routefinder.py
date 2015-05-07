@@ -25,8 +25,17 @@ def cut(line, distance):
 
 class RoutingError(Exception):
     pass
+    
+class InvalidInput(RoutingError):
+    pass
+    
+class NoPath(RoutingError):
+    pass
 
-
+class RouteFinderResponse(object):
+    pass
+    
+    
 
 class MidLinkRouteFinder(object):
 
@@ -71,12 +80,12 @@ class MidLinkRouteFinder(object):
         
     def setPresetWeights(self):
 
-        for weight_name, multipliers in self.weight_presets:
+        for weight_name, multipliers in self.weight_presets.items():
             self.weightGraph(multipliers, weight_name)
 
 
     def weightGraph(self, multipliers, weight_name):
-
+        graph = self.graph
         for u, v, k, data in graph.edges_iter(keys = True, data = True):
 
             m = 1.0
@@ -227,13 +236,13 @@ class MidLinkRouteFinder(object):
         return dist_along
             
 
-    def getRoute(self, waypoints, multipliers = None, preset = None):
+    def _getRoute(self, waypoints, multipliers = None, preset = None):
 
         if len(waypoints) < 2:
-            raise RoutingError('Must provide at least 2 waypoints')
+            raise InvalidInput('Must provide at least 2 waypoints')
 
         if (multipliers is not None) and (preset is not None):
-            raise RoutingError('multipliers and preset cannot both be specified')
+            raise InvalidInput('multipliers and preset cannot both be specified')
         
         if multipliers is not None:
             weight_name = 'custom_weight'
@@ -241,7 +250,7 @@ class MidLinkRouteFinder(object):
 
         elif preset is not None:
             if preset not in self.weight_presents:
-                raise RoutingError('the value for preset is not one of the options')
+                raise InvalidInput('the value for preset is not one of the options')
             weight_name = preset
 
         else:
@@ -258,7 +267,7 @@ class MidLinkRouteFinder(object):
 
 
         if len(set(waypoint_nodes)) < 2:
-            raise RoutingError('the waypoints collapse to fewer than 2 nodes')
+            raise InvalidInput('the waypoints collapse to fewer than 2 nodes')
 
         nodes, keys = [], []
 
@@ -269,11 +278,19 @@ class MidLinkRouteFinder(object):
 
         nodes.append(nds[-1])
 
+        return nodes, keys
+    
+    def getRoute(self, waypoints, multipliers = None, preset = None):
+        
+        nodes, keys = self._getRoute(waypoints, multipliers, preset)
+        
+        result = RouteFinderResponse()
+        
+        result.coords = self.getRouteCoords(nodes, keys)
+        
+        return result
 
-
-        route_shape = self.getRouteShape(nodes, keys)
-
-        return route_shape
+        
             
 
     def getPath(self, nd0, nd1, weight_name):
@@ -285,7 +302,7 @@ class MidLinkRouteFinder(object):
                 weight_name
             )
         except networkx.NetworkXNoPath:
-            raise RoutingError('no path found between the points')
+            raise NoPath('no path found between the points')
 
 
         def getKey(u, v):
@@ -303,7 +320,7 @@ class MidLinkRouteFinder(object):
 
         return nodes, keys
 
-    def getLinkShape(self, link):
+    def getLinkCoords(self, link):
         u, v, k = link
 
         shape_order = self.getShapeOrder(u, v, k)
@@ -311,13 +328,13 @@ class MidLinkRouteFinder(object):
         shp = self.graph[u][v][k]['shape']
 
         if (u, v) == shape_order:
-            return shp
+            return shp.coords[:]
 
         else:
-            return geometry.LineString(shp.coords[::-1])
+            return shp.coords[::-1]
 
 
-    def getRouteShape(self, nodes, keys):
+    def getRouteCoords(self, nodes, keys):
 
 
         links = iter(zip(nodes[:-1], nodes[1:], keys))
@@ -327,12 +344,12 @@ class MidLinkRouteFinder(object):
 
         link = links.next()
 
-        result.extend(self.getLinkShape(link).coords[:])
+        result.extend(self.getLinkCoords(link))
 
         for link in links:
-            result.extend(self.getLinkShape(link).coords[1:])
+            result.extend(self.getLinkCoords(link))
 
-        return geometry.LineString(result)
+        return result
 
 
 
@@ -340,16 +357,7 @@ class MidLinkRouteFinder(object):
 #to do: joining links back together              
         
         
-if __name__ == '__main__':
 
-    graph = networkx.MultiGraph()
-    
-    graph.add_node(1, coords = (0,0))
-    graph.add_node(2, coords = (1,1))
-    
-    graph.add_edge(1, 2, coords = [], travel_order = [(1,2)], shape_order = (1,2))
-    
-    m = MidLinkRouteFinder(graph)
     
     
     

@@ -1,11 +1,11 @@
 from django.conf.urls import patterns, url
 
 
-from routefinder import views
+from . import views
 
-urlpatterns = patterns('',
+urlpatterns = [
 
     url('^find$', views.find, name='find')
 
 
-)
+]
