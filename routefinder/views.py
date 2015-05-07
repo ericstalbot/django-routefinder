@@ -44,13 +44,13 @@ def process_params(data):
         try:
             lat = float(lat)
         except ValueError:
-            raise InvalidParametervalue(
+            raise InvalidParameterValue(
                 'The latitude at index {} cannot be converted to a number'.format(i))
 
         try:
             lon = float(lon)
         except ValueError:
-            raise InvalidParametervalue(
+            raise InvalidParameterValue(
                 'The longitude at index {} cannot be converted to a number'.format(i))
 
         if (lat < -90.) or (90. < lat):
@@ -58,7 +58,7 @@ def process_params(data):
                 'The latitude at index {} is outside the range [-90, 90]'.format(i))
 
         if (lon < -180.) or (180. < lon):
-            raise InvalidParametervalue(
+            raise InvalidParameterValue(
                 'The longitude at index {} is outside the range [-180, 180]'.format(i))
 
         waypoints2.append((lat, lon))
@@ -78,7 +78,7 @@ def process_params(data):
     multipliers = {}
     for k, v in data.lists():
         if len(v) > 1:
-            raise InvalidParametervalue(
+            raise InvalidParameterValue(
                 'A multiplier is provided more than once for the {} tag'.format(k))
 
         v = v[0]
@@ -120,7 +120,6 @@ def find(request):
 
 
     status = 'ok'
-    msg = None
 
     data = request.GET
     
@@ -132,22 +131,19 @@ def find(request):
 
         result = rf.getRoute(**args)
 
+    except routefinder.InvalidInput, InvalidParameterValue as e:
+        status = 'invalid_request'
+
     except routefinder.NoPath as e:
         status = 'no_path'
-        msg = e.message
-    except routefinder.InvalidInput, InvalidParametervalue as e:
-        status = 'invalid_request'
-        msg = e.message
-            
-            
-    response = {'status': status}
-    if msg:
-        response['message'] = msg
 
-    response.update({
+    if status != 'ok':
+        return JsonResponse({'status': status, 'message': e.message})
+                
+
+    response = {
+        'status': status
         'coords': xy2latlon(result.coords)
     })
-
-
     return JsonResponse(response)
     
