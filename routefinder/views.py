@@ -2,7 +2,7 @@
 from django.http import HttpResponse, JsonResponse
 import pyproj
 
-from route_finder_instance import crs, units2miles, rf
+from route_finder_instance import crs, rf
 import routefinder
 
 
@@ -126,11 +126,9 @@ def find(request):
     try:
         args = process_params(data)
         
-        print args
-        
         waypoints = args['waypoints']
         args.update({'waypoints': latlon2xy(waypoints)})
-        print args
+
         result = rf.getRoute(**args)
 
     except (routefinder.InvalidInput, InvalidParameterValue) as e:
@@ -142,7 +140,8 @@ def find(request):
     if status != 'ok':
         return JsonResponse({'status': status, 'message': e.message})
                 
-
+    #to do: limit the number of digits on the 
+    #returned coords
     response = {
         'status': status,
         'coords': xy2latlon(result.coords)
