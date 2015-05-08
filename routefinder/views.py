@@ -1,10 +1,9 @@
 
 from django.http import HttpResponse, JsonResponse
-
-from route_finder_instance import crs, units2miles, rf
 import pyproj
 
-p = pyproj.Proj(**crs)
+from route_finder_instance import crs, units2miles, rf
+import routefinder
 
 
 class InvalidParameterValue(Exception):
@@ -28,7 +27,7 @@ def process_params(data):
     waypoints = waypoints[0]
    
     waypoints = waypoints.split('|')
-    waypoints = [x.split(',').strip() for x in waypoints]
+    waypoints = [x.split(',') for x in waypoints]
     
     waypoints2 = []
 
@@ -102,16 +101,17 @@ def process_params(data):
     return {'waypoints':waypoints2, 'preset':preset, 'multipliers': multipliers}
         
 
-
+p_wgs84 = pyproj.Proj(init='epsg:4326', no_defs=True)
+p_rf  = pyproj.Proj(**crs)
 
 def latlon2xy(waypoints):
     lats, lons = zip(*waypoints)
-    x, y = p(lons, lats)
+    x, y = pyproj.transform(p_wgs84, p_rf, lons, lats)
     return zip(x,y)
 
 def xy2latlon(coords):
     x, y = zip(*coords)
-    lons, lats = p(x, y, inverse = True)
+    lons, lats = pyproj.transform(p_rf, p_wgs84, x, y)
     return zip(lats, lons)
 
 
@@ -121,17 +121,19 @@ def find(request):
 
     status = 'ok'
 
-    data = request.GET
+    data = request.GET.copy()
     
     try:
         args = process_params(data)
-
+        
+        print args
+        
         waypoints = args['waypoints']
-        args.update({'waypoints': latlong2xy(waypoints)})
-
+        args.update({'waypoints': latlon2xy(waypoints)})
+        print args
         result = rf.getRoute(**args)
 
-    except routefinder.InvalidInput, InvalidParameterValue as e:
+    except (routefinder.InvalidInput, InvalidParameterValue) as e:
         status = 'invalid_request'
 
     except routefinder.NoPath as e:
@@ -142,8 +144,8 @@ def find(request):
                 
 
     response = {
-        'status': status
+        'status': status,
         'coords': xy2latlon(result.coords)
-    })
+    }
     return JsonResponse(response)
     
