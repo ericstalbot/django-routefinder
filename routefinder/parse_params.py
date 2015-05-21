@@ -83,9 +83,6 @@ def parse_params(data):
             raise InvalidParameterValue(
                 'The muliplier for the {} tag cannot be converted to a number'.format(k))
 
-        if v < 0.0:
-            raise InvalidParameterValue(
-                'The multiplier for the {} tag is negative'.format(k))
 
         multipliers[k] = v
         

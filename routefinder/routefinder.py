@@ -246,6 +246,9 @@ class MidLinkRouteFinder(object):
         
         if multipliers is not None:
             #to do: each multiplier key must appear on at least one link?
+            for tag, mul in multipliers.items():
+                if mul < 0.0:
+                    raise InvalidInput('multipliers cannot be negative')
             weight_name = 'custom_weight'
             self.weightGraph(multipliers, weight_name)
 

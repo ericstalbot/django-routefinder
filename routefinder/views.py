@@ -2,10 +2,10 @@
 from django.http import HttpResponse, JsonResponse
 import pyproj
 
-from parse_params import parse_params
+from parse_params import parse_params, InvalidParameterValue
 
 from route_finder_instance import crs, rf
-import routefinder
+from routefinder import InvalidInput
 
 
 
@@ -42,7 +42,7 @@ def find(request):
 
         result = rf.getRoute(**args)
 
-    except (routefinder.InvalidInput, InvalidParameterValue) as e:
+    except (InvalidInput, InvalidParameterValue) as e:
         status = 'invalid_request'
 
     except routefinder.NoPath as e:
